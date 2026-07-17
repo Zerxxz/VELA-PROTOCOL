@@ -49,3 +49,4 @@ logs/
 # Misc
 .pnp.*
 .pnp.js
+.vercel
