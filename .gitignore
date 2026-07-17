@@ -1,0 +1,51 @@
+# Hardhat / Solidity
+artifacts/
+cache/
+typechain-types/
+typechain/
+coverage/
+coverage.json
+out/
+.openzeppelin/
+
+# Next.js (web/)
+web/.next/
+web/out/
+web/next-env.d.ts
+web/.swc/
+web/.turbo/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build / dist
+dist/
+build/
+.tsbuildinfo
+
+# Env / secrets — DO NOT COMMIT
+.env
+.env.*
+.env.local
+!.env.example
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Misc
+.pnp.*
+.pnp.js

@@ -1,0 +1,18 @@
+{
+  "name": "vela-tee",
+  "version": "1.0.0",
+  "description": "VELA Confidential Compute enclave: private credit scoring + EIP-712 attestation signing",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "test": "tsx test/scoreModel.test.ts"
+  },
+  "dependencies": {
+    "ethers": "^6.13.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.16.0",
+    "typescript": "^5.4.0"
+  }
+}

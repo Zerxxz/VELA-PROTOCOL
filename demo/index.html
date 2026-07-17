@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VELA — Confidential Credit Layer on Flare</title>
+<style>
+  :root{
+    --bg:#0B0D12; --surface:#12151C; --raised:#1A1E27; --border:rgba(255,255,255,.09);
+    --text:#F4F5F7; --muted:rgba(244,245,247,.60); --faint:rgba(244,245,247,.38);
+    --accent:#E8564B; --accent2:#F6A44A; --pink:#FF7E9D;
+    --green:#5BD08A; --blue:#5E9FE8; --gold:#EAC26B;
+    --grad:linear-gradient(135deg,#E8564B 0%,#F6A44A 100%);
+    --r:16px; --r-sm:10px;
+    font-synthesis:none;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:radial-gradient(1200px 700px at 78% -10%,rgba(232,86,75,.16),transparent 60%),
+               radial-gradient(900px 600px at 8% 8%,rgba(94,159,232,.10),transparent 55%),var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased; letter-spacing:-.01em;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  .mono{font-family:"SF Mono",Menlo,Consolas,monospace}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+     background:rgba(11,13,18,.72);border-bottom:1px solid var(--border)}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:600;font-size:18px}
+  .logo{width:30px;height:30px}
+  .pill{font-size:12px;color:var(--muted);border:1px solid var(--border);
+        padding:5px 11px;border-radius:999px;background:var(--surface)}
+  .nav-links{display:flex;gap:26px;font-size:14px;color:var(--muted)}
+  .nav-links a{color:inherit;text-decoration:none}
+  .nav-links a:hover{color:var(--text)}
+
+  /* hero */
+  header{padding:88px 0 64px;text-align:center}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--accent2);
+          border:1px solid rgba(246,164,74,.30);background:rgba(246,164,74,.08);
+          padding:6px 14px;border-radius:999px;margin-bottom:26px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+  h1{font-size:56px;line-height:1.05;font-weight:680;letter-spacing:-.03em;margin-bottom:20px}
+  h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{font-size:19px;color:var(--muted);max-width:620px;margin:0 auto 34px}
+  .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .btn{border:none;cursor:pointer;font-size:15px;font-weight:560;padding:13px 24px;border-radius:12px;
+       text-decoration:none;display:inline-flex;align-items:center;gap:9px;transition:.18s;font-family:inherit}
+  .btn.primary{background:var(--grad);color:#fff;box-shadow:0 8px 24px rgba(232,86,75,.30)}
+  .btn.primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(232,86,75,.40)}
+  .btn.ghost{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+  .btn.ghost:hover{background:var(--raised)}
+
+  .chips{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:38px}
+  .chip{font-size:13px;color:var(--muted);background:var(--surface);border:1px solid var(--border);
+       padding:8px 15px;border-radius:999px;display:flex;align-items:center;gap:8px}
+  .chip b{color:var(--text);font-weight:560}
+
+  section{padding:56px 0}
+  .stitle{font-size:13px;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);
+          font-weight:600;margin-bottom:12px;text-align:center}
+  .shead{font-size:34px;font-weight:640;letter-spacing:-.02em;text-align:center;margin-bottom:14px}
+  .sdesc{color:var(--muted);text-align:center;max-width:600px;margin:0 auto 44px;font-size:16px}
+
+  /* problem cards */
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:26px}
+  .card .ic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;font-size:20px;margin-bottom:16px;
+           background:rgba(232,86,75,.12);border:1px solid rgba(232,86,75,.24)}
+  .card h3{font-size:17px;font-weight:600;margin-bottom:8px}
+  .card p{font-size:14.5px;color:var(--muted)}
+
+  /* flow / architecture */
+  .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;align-items:stretch;position:relative}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 16px;text-align:center;position:relative;z-index:2}
+  .step .n{width:26px;height:26px;border-radius:50%;background:var(--grad);color:#fff;font-size:13px;font-weight:600;
+          display:grid;place-items:center;margin:0 auto 12px}
+  .step h4{font-size:14.5px;font-weight:600;margin-bottom:6px}
+  .step p{font-size:12.5px;color:var(--faint)}
+  .flow .arrow{align-self:center;color:var(--accent);font-size:20px;text-align:center;padding:0 2px;z-index:1}
+  .flowline{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr auto 1fr;gap:8px;align-items:stretch}
+
+  /* interactive demo */
+  .demo{background:linear-gradient(180deg,var(--surface),rgba(18,21,28,.4));
+        border:1px solid var(--border);border-radius:22px;overflow:hidden}
+  .demo-top{display:flex;align-items:center;gap:10px;padding:16px 22px;border-bottom:1px solid var(--border);
+           background:var(--raised)}
+  .tl{display:flex;gap:7px}.tl i{width:11px;height:11px;border-radius:50%;display:block}
+  .tl i:nth-child(1){background:#E8564B}.tl i:nth-child(2){background:#F6A44A}.tl i:nth-child(3){background:#5BD08A}
+  .demo-top .t{font-size:13px;color:var(--muted)}
+  .demo-body{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .panel{padding:28px}
+  .panel.left{border-right:1px solid var(--border)}
+  .panel h3{font-size:15px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .lock{font-size:12px;color:var(--green);background:rgba(91,208,138,.10);border:1px solid rgba(91,208,138,.28);
+       padding:3px 9px;border-radius:999px;font-weight:500}
+  .panel .hint{font-size:12.5px;color:var(--faint);margin-bottom:22px}
+  .field{margin-bottom:17px}
+  .field label{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px}
+  .field label b{color:var(--text);font-weight:600}
+  input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:6px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+    background:#fff;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4);border:2px solid var(--accent)}
+  .src{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--faint);margin-top:5px}
+  .tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;letter-spacing:.03em}
+  .tag.fdc{background:rgba(94,159,232,.14);color:var(--blue)}
+  .tag.ftso{background:rgba(234,194,107,.14);color:var(--gold)}
+
+  /* right panel: result */
+  .gauge-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:10px}
+  .gauge{position:relative;width:200px;height:120px}
+  .score-num{font-size:52px;font-weight:700;line-height:1;letter-spacing:-.02em;
+    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .score-max{font-size:14px;color:var(--faint)}
+  .tier{margin-top:10px;font-size:13px;font-weight:600;padding:6px 16px;border-radius:999px;
+    background:rgba(91,208,138,.12);color:var(--green);border:1px solid rgba(91,208,138,.28)}
+  .factors{margin-top:22px;display:flex;flex-direction:column;gap:11px}
+  .frow{display:flex;flex-direction:column;gap:5px}
+  .frow .fl{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}
+  .frow .fl b{color:var(--text);font-weight:500}
+  .bar{height:6px;border-radius:6px;background:var(--raised);overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--grad);border-radius:6px;transition:width .5s cubic-bezier(.2,.7,.2,1)}
+
+  .onchain{border-top:1px solid var(--border);padding:22px 28px;background:var(--raised)}
+  .onchain h3{font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .oc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .oc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px}
+  .oc .k{font-size:11.5px;color:var(--faint);margin-bottom:6px}
+  .oc .v{font-size:20px;font-weight:660;letter-spacing:-.01em}
+  .oc .v.small{font-size:13px;font-weight:500}
+  .oc .v.green{color:var(--green)}
+  .commit{margin-top:14px;font-size:11.5px;color:var(--faint);word-break:break-all;
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px}
+  .commit b{color:var(--blue)}
+
+  /* pillars */
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .pillar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;text-align:center}
+  .pillar .ic{font-size:26px;margin-bottom:12px}
+  .pillar h4{font-size:15px;font-weight:600;margin-bottom:6px}
+  .pillar p{font-size:13px;color:var(--muted)}
+
+  footer{border-top:1px solid var(--border);padding:40px 0;text-align:center;color:var(--faint);font-size:13px;margin-top:40px}
+  footer b{color:var(--muted)}
+
+  @media(max-width:860px){
+    h1{font-size:38px}.grid3,.grid4{grid-template-columns:1fr}
+    .demo-body{grid-template-columns:1fr}.panel.left{border-right:none;border-bottom:1px solid var(--border)}
+    .flow,.flowline{grid-template-columns:1fr;gap:10px}.flow .arrow{transform:rotate(90deg)}
+    .oc-grid{grid-template-columns:1fr}.nav-links{display:none}
+  }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="lg" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#E8564B"/><stop offset="1" stop-color="#F6A44A"/></linearGradient></defs><path d="M6 7 L20 33 L34 7" stroke="url(#lg)" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="12" r="3" fill="#F6A44A"/></svg>
+    VELA
+  </div>
+  <div class="nav-links">
+    <a href="#problem">Problem</a><a href="#how">How it works</a><a href="#demo">Live demo</a><a href="#stack">Flare stack</a>
+  </div>
+  <span class="pill">Flare Summer Signal</span>
+</div></nav>
+
+<header><div class="wrap">
+  <span class="eyebrow"><span class="dot"></span> Confidential Compute · Interoperable Assets</span>
+  <h1>Prove you're creditworthy.<br><span class="g">Reveal nothing.</span></h1>
+  <p class="sub">VELA is a confidential credit &amp; reputation layer on Flare. A TEE computes your score over private, cross-chain data — the chain sees only the result, unlocking under-collateralized FXRP loans.</p>
+  <div class="cta">
+    <a href="#demo" class="btn primary">▶ Try the live demo</a>
+    <a href="#how" class="btn ghost">See architecture</a>
+  </div>
+  <div class="chips">
+    <span class="chip"><b>Confidential Compute</b> TEE scoring</span>
+    <span class="chip"><b>FDC</b> trustless inputs</span>
+    <span class="chip"><b>FTSOv2</b> live pricing</span>
+    <span class="chip"><b>FAssets</b> FXRP lending</span>
+  </div>
+</div></header>
+
+<section id="problem"><div class="wrap">
+  <div class="stitle">The problem</div>
+  <h2 class="shead">DeFi is stuck at 150% collateral</h2>
+  <p class="sdesc">Everyone must over-collateralize because no one can prove creditworthiness without doxxing their finances. VELA breaks the trade-off between privacy and trust.</p>
+  <div class="grid3">
+    <div class="card"><div class="ic">🔒</div><h3>Privacy vs. proof</h3><p>To get better loan terms you must expose bank statements, balances and history. On a public chain that's unthinkable.</p></div>
+    <div class="card"><div class="ic">💸</div><h3>Capital trapped</h3><p>Over-collateralization locks billions of idle capital. A prime borrower posts the same 150% as an anonymous wallet.</p></div>
+    <div class="card"><div class="ic">🔗</div><h3>Fragmented identity</h3><p>Your real financial life spans XRPL, Bitcoin and Web2. None of it counts on-chain today.</p></div>
+  </div>
+</div></section>
+
+<section id="how"><div class="wrap">
+  <div class="stitle">How it works</div>
+  <h2 class="shead">Trustless inputs, private compute, public proof</h2>
+  <p class="sdesc">Raw data enters a Flare Confidential Compute enclave, never the chain. Only a signed score leaves.</p>
+  <div class="flowline">
+    <div class="step"><div class="n">1</div><h4>Attest inputs</h4><p>XRPL / BTC payments &amp; Web2 data verified via <b>FDC</b> Merkle proofs.</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">2</div><h4>Enter enclave</h4><p>Raw data decrypted only inside the <b>TEE</b>. Never on-chain.</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">3</div><h4>Compute score</h4><p>Deterministic, explainable model → score + risk tier.</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">4</div><h4>Sign &amp; commit</h4><p>Enclave signs an EIP-712 attestation + input commitment.</p></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">5</div><h4>Borrow</h4><p>Registry verifies the TEE, pool lends <b>FXRP</b> at your tier.</p></div>
+  </div>
+</div></section>
+
+<section id="demo"><div class="wrap">
+  <div class="stitle">Live demo</div>
+  <h2 class="shead">Move the sliders — watch privacy stay intact</h2>
+  <p class="sdesc">The left panel is <b>inside the enclave</b> (private). The right and bottom are what the blockchain actually sees.</p>
+
+  <div class="demo">
+    <div class="demo-top"><div class="tl"><i></i><i></i><i></i></div><span class="t mono">vela-enclave · Confidential Space (TEE)</span></div>
+    <div class="demo-body">
+      <div class="panel left">
+        <h3>🔏 Private inputs <span class="lock">sealed in TEE</span></h3>
+        <p class="hint">These values never leave the enclave. Verified by FDC before entering.</p>
+
+        <div class="field"><label>Verifiable assets <b id="vAssets">$120,000</b></label>
+          <input type="range" id="assets" min="0" max="250000" step="1000" value="120000">
+          <div class="src"><span class="tag fdc">FDC</span> AddressBalance · XRPL + BTC · priced by <span class="tag ftso">FTSOv2</span></div></div>
+
+        <div class="field"><label>Liabilities <b id="vLiab">$5,000</b></label>
+          <input type="range" id="liab" min="0" max="100000" step="500" value="5000">
+          <div class="src"><span class="tag fdc">FDC</span> BalanceDecreasingTransaction</div></div>
+
+        <div class="field"><label>Wallet history <b id="vHist">54 months</b></label>
+          <input type="range" id="hist" min="0" max="72" step="1" value="54">
+          <div class="src"><span class="tag fdc">FDC</span> first-seen block attestation</div></div>
+
+        <div class="field"><label>On-chain payments <b id="vPay">280</b></label>
+          <input type="range" id="pay" min="0" max="400" step="1" value="280">
+          <div class="src"><span class="tag fdc">FDC</span> Payment (XRP / BTC / DOGE)</div></div>
+
+        <div class="field"><label>Monthly inflow <b id="vInflow">$9,000</b></label>
+          <input type="range" id="inflow" min="0" max="20000" step="250" value="9000">
+          <div class="src"><span class="tag fdc">FDC</span> Web2Json bank statement</div></div>
+
+        <div class="field"><label>Liquidations / defaults <b id="vLiq">0</b></label>
+          <input type="range" id="liqs" min="0" max="6" step="1" value="0">
+          <div class="src"><span class="tag fdc">FDC</span> historical default events</div></div>
+      </div>
+
+      <div class="panel right">
+        <h3>📤 Public output <span class="lock" style="color:var(--blue);background:rgba(94,159,232,.10);border-color:rgba(94,159,232,.28)">on-chain</span></h3>
+        <p class="hint">Signed by the enclave, verified by VelaScoreRegistry.</p>
+        <div class="gauge-wrap">
+          <div class="gauge">
+            <svg viewBox="0 0 200 120" width="200" height="120">
+              <path d="M15 110 A85 85 0 0 1 185 110" fill="none" stroke="#1A1E27" stroke-width="14" stroke-linecap="round"/>
+              <path id="arc" d="M15 110 A85 85 0 0 1 185 110" fill="none" stroke="url(#lg)" stroke-width="14" stroke-linecap="round" stroke-dasharray="267" stroke-dashoffset="267" style="transition:stroke-dashoffset .6s cubic-bezier(.2,.7,.2,1)"/>
+            </svg>
+            <div style="position:absolute;inset:0;top:38px;display:flex;flex-direction:column;align-items:center">
+              <div class="score-num" id="scoreNum">0</div><div class="score-max">/ 1000</div>
+            </div>
+          </div>
+          <div class="tier" id="tier">—</div>
+        </div>
+        <div class="factors" id="factors"></div>
+      </div>
+    </div>
+
+    <div class="onchain">
+      <h3>⚡ Under-collateralized FXRP loan <span class="mono" style="font-size:11px;color:var(--faint)">VelaLendingPool.borrow()</span></h3>
+      <div class="oc-grid">
+        <div class="oc"><div class="k">Collateral required (tier-based)</div><div class="v green" id="collat">60%</div></div>
+        <div class="oc"><div class="k">Borrow 100 FXRP → lock</div><div class="v" id="lock">60 FXRP</div></div>
+        <div class="oc"><div class="k">Capital unlocked vs. 150%</div><div class="v" id="unlock" style="color:var(--accent2)">+90 FXRP</div></div>
+      </div>
+      <div class="commit">FTSOv2 FXRP/USD: <b id="px">$2.10</b> &nbsp;·&nbsp; loan value <b id="loanUsd">$210.00</b> &nbsp;·&nbsp; dataCommitment <b id="commit">0x…</b> &nbsp;(raw inputs never revealed)</div>
+    </div>
+  </div>
+</div></section>
+
+<section id="stack"><div class="wrap">
+  <div class="stitle">Why it wins</div>
+  <h2 class="shead">Every Flare pillar, one product</h2>
+  <p class="sdesc">VELA is not a demo of one feature — it composes the whole stack into a product with real capital impact. Fits both bounties at once.</p>
+  <div class="grid4">
+    <div class="pillar"><div class="ic">🧠</div><h4>Confidential Compute</h4><p>Scoring runs in a TEE; identity registered via vTPM attestation + FDC.</p></div>
+    <div class="pillar"><div class="ic">🔎</div><h4>FDC</h4><p>Every input is Merkle-proven from XRPL, BTC or Web2 before it counts.</p></div>
+    <div class="pillar"><div class="ic">📈</div><h4>FTSOv2</h4><p>Live FXRP/USD feeds value collateral and loans in real time.</p></div>
+    <div class="pillar"><div class="ic">🌊</div><h4>FAssets</h4><p>FXRP is the borrowable asset — real XRP liquidity in Flare DeFi.</p></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <b>VELA</b> — Confidential Credit &amp; Reputation Layer on Flare &nbsp;·&nbsp; Built for Flare Summer Signal &nbsp;·&nbsp; <span class="mono">FTSOv2 + FDC + FAssets + Confidential Compute</span>
+</div></footer>
+
+<script>
+  const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
+  const TIERS=["High risk","Subprime","Fair","Strong","Prime"];
+  const COLLAT=[150,120,100,80,60];
+  const els=id=>document.getElementById(id);
+  const ids=["assets","liab","hist","pay","inflow","liqs"];
+
+  function tierFromScore(s){if(s>=850)return 4;if(s>=700)return 3;if(s>=550)return 2;if(s>=400)return 1;return 0;}
+
+  function compute(){
+    const assets=+els("assets").value, liab=+els("liab").value, hist=+els("hist").value,
+          pay=+els("pay").value, inflow=+els("inflow").value, liqs=+els("liqs").value;
+    els("vAssets").textContent="$"+assets.toLocaleString();
+    els("vLiab").textContent="$"+liab.toLocaleString();
+    els("vHist").textContent=hist+" months";
+    els("vPay").textContent=pay;
+    els("vInflow").textContent="$"+inflow.toLocaleString();
+    els("vLiq").textContent=liqs;
+
+    const net=assets-liab;
+    const leverage=liab<=0?1:clamp(net/Math.max(assets,1),0,1);
+    const solvency=clamp(.5*leverage+.5*clamp(net/50000,0,1),0,1);
+    const history=clamp(hist/48,0,1);
+    const behaviour=clamp(clamp(pay/200,0,1)-clamp(liqs*.25,0,1),0,1);
+    const cashflow=clamp(inflow/8000,0,1);
+    const bureau=.5;
+    const F=[["Solvency & net worth",solvency,35],["Credit history depth",history,15],
+            ["On-chain repayment",behaviour,20],["Cash-flow stability",cashflow,15],["External bureau signal",bureau,15]];
+    const score=clamp(Math.round(F.reduce((a,f)=>a+f[1]*f[2],0)*10),0,1000);
+    const tier=tierFromScore(score);
+
+    // gauge
+    els("scoreNum").textContent=score;
+    els("arc").style.strokeDashoffset=267-(267*score/1000);
+    els("tier").textContent=TIERS[tier]+" · Tier "+tier;
+
+    // factors
+    els("factors").innerHTML=F.map(f=>{
+      const pts=Math.round(f[1]*f[2]*10);
+      return `<div class="frow"><div class="fl"><span>${f[0]}</span><b>${pts} / ${f[2]*10}</b></div><div class="bar"><i style="width:${f[1]*100}%"></i></div></div>`;
+    }).join("");
+
+    // lending
+    const c=COLLAT[tier];
+    els("collat").textContent=c+"%";
+    els("lock").textContent=c+" FXRP";
+    els("unlock").textContent=(c<=150?"+"+(150-c):"0")+" FXRP";
+    const px=2.10;
+    els("px").textContent="$"+px.toFixed(2);
+    els("loanUsd").textContent="$"+(100*px).toFixed(2);
+
+    // fake but deterministic-looking commitment
+    let h=0; [assets,liab,hist,pay,inflow,liqs].forEach(v=>{h=(h*31+v)>>>0;});
+    els("commit").textContent="0x"+(h.toString(16).padStart(8,"0")+"a91f3c7d2e").slice(0,14)+"…";
+  }
+  ids.forEach(id=>els(id).addEventListener("input",compute));
+  compute();
+</script>
+</body>
+</html>
