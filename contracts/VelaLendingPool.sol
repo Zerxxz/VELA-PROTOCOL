@@ -62,6 +62,7 @@ contract VelaLendingPool {
     error InsufficientLiquidity();
     error NoActiveLoan();
     error NotGovernance();
+    error ZeroAddress();
 
     modifier onlyGovernance() {
         if (msg.sender != governance) revert NotGovernance();
@@ -75,6 +76,10 @@ contract VelaLendingPool {
         bytes21 fxrpUsdFeedId_,
         address governance_
     ) {
+        if (address(scoreRegistry_) == address(0)) revert ZeroAddress();
+        if (address(ftsoV2_) == address(0)) revert ZeroAddress();
+        if (address(fxrp_) == address(0)) revert ZeroAddress();
+        if (governance_ == address(0)) revert ZeroAddress();
         scoreRegistry = scoreRegistry_;
         ftsoV2 = ftsoV2_;
         fxrp = fxrp_;
@@ -85,8 +90,10 @@ contract VelaLendingPool {
     // --------------------------------------------------------------- liquidity
 
     function addLiquidity(uint256 amount) external {
-        require(fxrp.transferFrom(msg.sender, address(this), amount), "transfer failed");
+        // Effects: update state before external call (CEI pattern)
         totalLiquidity += amount;
+        // Interactions: external call after state is committed
+        require(fxrp.transferFrom(msg.sender, address(this), amount), "transfer failed");
         emit LiquidityAdded(msg.sender, amount);
     }
 
@@ -112,16 +119,18 @@ contract VelaLendingPool {
         if (principal > totalLiquidity) revert InsufficientLiquidity();
         require(!loans[msg.sender].active, "loan exists");
 
-        require(fxrp.transferFrom(msg.sender, address(this), collateral), "collat transfer");
+        // Effects: update all state before external calls (CEI pattern)
         totalLiquidity -= principal;
-        require(fxrp.transfer(msg.sender, principal), "principal transfer");
-
         loans[msg.sender] = Loan({
             principal: principal,
             collateral: collateral,
             openedAt: uint64(block.timestamp),
             active: true
         });
+
+        // Interactions: external calls after state is committed
+        require(fxrp.transferFrom(msg.sender, address(this), collateral), "collat transfer");
+        require(fxrp.transfer(msg.sender, principal), "principal transfer");
 
         emit Borrowed(msg.sender, principal, collateral, s.riskTier);
     }
@@ -130,9 +139,12 @@ contract VelaLendingPool {
         Loan memory loan = loans[msg.sender];
         if (!loan.active) revert NoActiveLoan();
 
+        // Effects: update all state before external calls (CEI pattern)
         delete loans[msg.sender];
-        require(fxrp.transferFrom(msg.sender, address(this), loan.principal), "repay transfer");
         totalLiquidity += loan.principal;
+
+        // Interactions: external calls after state is committed
+        require(fxrp.transferFrom(msg.sender, address(this), loan.principal), "repay transfer");
         require(fxrp.transfer(msg.sender, loan.collateral), "return collat");
 
         emit Repaid(msg.sender, loan.principal, loan.collateral);
@@ -156,6 +168,7 @@ contract VelaLendingPool {
     // -------------------------------------------------------------- governance
 
     function setFtsoV2(IFtsoV2 ftsoV2_) external onlyGovernance {
+        if (address(ftsoV2_) == address(0)) revert ZeroAddress();
         ftsoV2 = ftsoV2_;
     }
 
